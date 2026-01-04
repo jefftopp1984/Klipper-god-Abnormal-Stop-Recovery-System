@@ -47,6 +47,8 @@ Why this isn't just a normal PLR:
 - It will actually allow a resume after a USB Disconnect as well
 - It is also SELF-CLEANING. The recovery and current print files AUTOMATICALLY purge following a successful print or completion of the recovered print.
 
+********* NOTE: If Klipper fails to run the _SAVE_FILE macro because it is busy handling other start-of-print tasks, simply move the _SAVE_FILE macro call to a LATER point in the start print script. ***************
+
 
 ***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
 
