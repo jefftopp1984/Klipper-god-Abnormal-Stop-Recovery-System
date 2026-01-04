@@ -22,6 +22,30 @@ Normal Print → Power Loss → Prompt → Recover File → Z Verify → Resume
 
 - The final prompt tells the user to remove the check paper, ensure that the print is still adhered to the bed properly, and ensure they are actually ready for the resume to happen. Once they click ok, the nozzle lifts 10mm, is set to the full temperature, and when the nozzle stabilizes at that temperature, the print resumes automatically.
 
+
+WHY THIS IS SAFE:
+
+- It DOES NOT violate Klipper safety protocols
+- It involves USER VERIFICATION
+- NO DOWNWARD MOVEMENT occurs until the user has done a sanity check on the reported data
+- A TRUE HOME of X and Y are performed
+- Z is NOT trusted until the user physically verifies it!
+- Nozzle Temps are carefully applied to prevent print and/or printer damage
+- The user can ABORT the resume at any stage in the process
+- It DOES NOT automatically resume
+- Several Sanity Checks happen along the way
+- It WILL NOT run any axes beyond their mechanical limits like other published PLR systems
+
+Why this isn't just a normal PLR:
+
+- EVERYTHING is tracked throughout the print progress
+- It works for ANY KIND of abnormal stop, NOT just Power Loss
+- It DOES NOT require any special hardware to initiate a "Klipper Panic" situation when a pin is losing voltage
+- It CAN be used with a UPS and a PAUSE_NEXT_LAYER macro to provide true seamless resumes after a power loss as long as the UPS battery does not expire before the end of that layer
+- It sets a NON-VOLATILE variable that is checked on restart from ANY condition
+- It will actually allow a resume after a USB Disconnect as well
+
+
 ***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
 
 
