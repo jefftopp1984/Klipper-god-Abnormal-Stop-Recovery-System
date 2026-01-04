@@ -63,11 +63,11 @@ Users will also have to ensure that the shell commands are executable via SSH by
 
 ********* REMEMBER, MAKE SURE THESE PATHS ARE CORRECT FOR YOUR SPECIFIC SETUP! **********
 
-chmod -x /home/sonic/printer_data/config/save_current_file.sh
+chmod +x /home/sonic/printer_data/config/save_current_file.sh
 
 and
 
-chmod -x /home/sonic/printer_data/config/print_recovery.sh
+chmod +x /home/sonic/printer_data/config/print_recovery.sh
 
 AND that CRLF has not been applied using:
 
