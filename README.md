@@ -1,6 +1,6 @@
 ******* KLIPPER-GOD RECOVERY SYSTEM ********
 
-Here is a TRUE WORKING Print Recovery System for Open-Source Klipper Users. This system is NOT UNSAFE for your equipment like other PLR systems such as Yumi and Omega that BLINDLY assume that the X and Y are at 0 when setting the kinematic position of the printer! I have tried those systems and they attempt to run the X and Y axes BEYOND THEIR MECHANICAL LIMITS because they do not home the X and Y axes, but instead set the Kinematic Position of X and Y to 0! It flat out P!$$ES ME OFF that these systems have been published for others to use when they BLANTANTLY DISREGARD AND BYPASS KLIPPER SAFETY SYSTEMS!!!!!! This system DOES NOT DO THAT. This system RESPECTS a user's equipment, NO downward movement is done until the user is ready for it, and it DOES NOT bypass ANY of Klipper's built-in safety measures! The USER has the final say, NOTHING is assumed to be correct, and the user can CANCEL the process at any point during the resume sequence. This system has been modeled very largely around the OEM recovery systems like Creality's factory recovery system on the Sonic Pad, but have a few enhancements over their system: 1, it removes the nozzle from the print the moment the temperature reaches target -50C, then it waits for the bed to fully heat before moving anything on the printer. The work flow is as follows:
+Here is a TRUE WORKING Print Recovery System for Open-Source Klipper Users. This IS NOT a slicer hack! This system is NOT UNSAFE for your equipment like other PLR systems such as Yumi and Omega that BLINDLY assume that the X and Y are at 0 when setting the kinematic position of the printer! I have tried those systems and they attempt to run the X and Y axes BEYOND THEIR MECHANICAL LIMITS because they do not home the X and Y axes, but instead set the Kinematic Position of X and Y to 0! It flat out P!$$ES ME OFF that these systems have been published for others to use when they BLANTANTLY DISREGARD AND BYPASS KLIPPER SAFETY SYSTEMS!!!!!! This system DOES NOT DO THAT. This system RESPECTS a user's equipment, NO downward movement is done until the user is ready for it, and it DOES NOT bypass ANY of Klipper's built-in safety measures! The USER has the final say, NOTHING is assumed to be correct, and the user can CANCEL the process at any point during the resume sequence. This system has been modeled very largely around the OEM recovery systems like Creality's factory recovery system on the Sonic Pad, but have a few enhancements over their system: 1, it removes the nozzle from the print the moment the temperature reaches target -50C, then it waits for the bed to fully heat before moving anything on the printer. The work flow is as follows:
 
 Normal Print → Power Loss → Prompt → Recover File → Z Verify → Resume
 
@@ -38,12 +38,14 @@ WHY THIS IS SAFE:
 
 Why this isn't just a normal PLR:
 
+- This is NOT a slicer hack! This is a TRUE recovery system that SURVIVES RESTARTS.
 - EVERYTHING is tracked throughout the print progress
 - It works for ANY KIND of abnormal stop, NOT just Power Loss
 - It DOES NOT require any special hardware to initiate a "Klipper Panic" situation when a pin is losing voltage
 - It CAN be used with a UPS and a PAUSE_NEXT_LAYER macro to provide true seamless resumes after a power loss as long as the UPS battery does not expire before the end of that layer
 - It sets a NON-VOLATILE variable that is checked on restart from ANY condition
 - It will actually allow a resume after a USB Disconnect as well
+- It is also SELF-CLEANING. The recovery and current print files AUTOMATICALLY purge following a successful print or completion of the recovered print.
 
 
 ***************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************
