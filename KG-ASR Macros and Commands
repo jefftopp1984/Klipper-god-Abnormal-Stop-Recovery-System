@@ -1,0 +1,514 @@
+# ********** Place this line in your start print macro or start print gcode section of your slicer ************
+
+   _SAVE_FILE
+
+# ********** Place these lines at the end of your end print macro or in the end print gcode section of your slicer ************
+
+   UPDATE_DELAYED_GCODE ID=_CLR_RECOVERED DURATION=30
+
+   _CLR_PRINT_INFO
+
+# ********** Place these lines in your (after) layer change gcode section of your slicer ************
+
+SET_PRINT_STATS_INFO CURRENT_LAYER={layer_num}
+SET_GCODE_VARIABLE MACRO=_LOG_PROGRESS VARIABLE=reached_point VALUE={layer_num}
+_LOG_PROGRESS
+
+# ********** Place this macro in your main printer.cfg file or any filament files or anywhere you normally load your bed mesh. Change the name of the mesh as needed. **************
+
+[gcode_macro _REC_LOAD_MESH]
+gcode:
+
+     BED_MESH_PROFILE LOAD=default_profile # Change this profile name as needed
+
+# ********* Place this macro and this include line in your printer.cfg file or equivalent. *************
+
+[gcode_macro _CLOSE_MSG]
+gcode:
+
+   RESPOND TYPE=command MSG="action:prompt_begin"
+   RESPOND TYPE=command MSG="action:prompt_end"
+
+[include ab_stop_recover.cfg]
+
+# ******** Ensure these sections are also in your printer.cfg file if they don't already exist **********
+
+[save_variables]
+filename: variables.cfg # Change this name for additional printers
+
+[respond]
+
+
+# ********* Place everything below this line in a new file named ab_stop_recover.cfg **************
+
+# ***** Abnormal Stop Recovery Macros *****
+
+[gcode_macro _LOG_PROGRESS]
+variable_reached_point: 0
+variable_actual_x: 0
+variable_actual_y: 0
+variable_actual_z: 0
+gcode:
+
+     {% set actual_x = printer.toolhead.position.x | round(3) %}
+     {% set actual_y = printer.toolhead.position.y | round(3) %}
+     {% set actual_z = printer.toolhead.position.z | round(3) %}
+     
+     SAVE_VARIABLE VARIABLE=z_height VALUE={actual_z}
+     SAVE_VARIABLE VARIABLE=x_pos VALUE={actual_x}
+     SAVE_VARIABLE VARIABLE=y_pos VALUE={actual_y}
+     SAVE_VARIABLE VARIABLE=print_progress VALUE={reached_point +1}
+     SAVE_VARIABLE VARIABLE=ext_target VALUE={printer.extruder.target}
+     SAVE_VARIABLE VARIABLE=bed_target VALUE={printer.heater_bed.target}
+
+
+[delayed_gcode RESUME_INTERRUPTED]
+initial_duration: 2
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+    
+     {% if svv.actively_printing|default(0)|int == 1 %}
+
+         _RESUME_INT_PROMPT
+     
+     {% endif %}
+
+[gcode_macro _RESUME_INT_PROMPT]
+gcode:
+
+      RESPOND TYPE=command MSG="action:prompt_begin Resume Interrupted Print?"
+      RESPOND TYPE=command MSG="action:prompt_text Abnormal Stop Detected. Would you like to resume the interrupted print? If yes, please wait for the next message. The printer is NOT hung."
+      RESPOND TYPE=command MSG="action:prompt_button YES|_INIT_RESUME_INT|primary"
+      RESPOND TYPE=command MSG="action:prompt_button NO|_CANCEL_INT|secondary"
+      RESPOND TYPE=command MSG="action:prompt_show"
+
+
+[gcode_macro _INIT_RESUME_INT]
+gcode:
+
+     _CLOSE_MSG
+
+     RUN_SHELL_COMMAND CMD=recover_print
+
+     SAVE_VARIABLE VARIABLE=print_recovered VALUE=1
+
+     _RESUME_INT
+     
+[gcode_shell_command recover_print]
+command: /home/sonic/printer_data/config/print_recovery.sh
+timeout: 5     
+
+
+[gcode_macro _CANCEL_INT]
+gcode:
+
+     _CLOSE_MSG
+
+     SAVE_VARIABLE VARIABLE=z_height VALUE=0
+     SAVE_VARIABLE VARIABLE=print_progress VALUE=0
+     SAVE_VARIABLE VARIABLE=actively_printing VALUE=0
+     RUN_SHELL_COMMAND CMD=clear_current_file
+
+     UPDATE_DELAYED_GCODE ID=_CLR_RECOVERED DURATION=30
+
+[gcode_macro _SAVE_FILE]
+gcode:
+
+     RUN_SHELL_COMMAND CMD=save_current_file
+     SAVE_VARIABLE VARIABLE=actively_printing VALUE=1
+
+[gcode_shell_command save_current_file]
+command: /home/sonic/printer_data/config/save_current_file.sh
+timeout: 5
+
+
+[gcode_shell_command clear_current_file]
+command: rm -f /home/sonic/printer_data/gcodes/current_print.txt
+timeout: 2
+
+[gcode_shell_command remove_recovery_file]
+command: rm -f /home/sonic/printer_data/gcodes/recovered.gcode
+timeout: 2
+
+
+[delayed_gcode _CLR_RECOVERED]
+initial_duration: 0
+gcode:
+
+    {% set svv = printer.save_variables.variables %}
+    
+    {% if svv.print_recovered|default(0)|int == 1 %}
+
+        RUN_SHELL_COMMAND CMD=remove_recovery_file
+
+        SET_GCODE_OFFSET Z_OFFSET=0
+
+        SAVE_VARIABLE VARIABLE=print_recovered VALUE=0
+
+    {% endif %}
+
+[gcode_macro _CLR_PRINT_INFO]
+gcode:
+
+    SAVE_VARIABLE VARIABLE=z_height VALUE=0
+    SAVE_VARIABLE VARIABLE=print_progress VALUE=0
+    SAVE_VARIABLE VARIABLE=actively_printing VALUE=0
+    SAVE_VARIABLE VARIABLE=ext_target VALUE=0
+    SAVE_VARIABLE VARIABLE=bed_target VALUE=0
+    RUN_SHELL_COMMAND CMD=clear_current_file
+
+
+[gcode_macro _RESUME_INT]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set ext_target = svv.ext_target | float %}
+     {% set bed_target = svv.bed_target | float %}
+     {% set resume_z = svv.z_height | float %}
+
+     {% if printer.extruder.temperature <= (ext_target - 50) %}
+
+        M104 S{ext_target - 50}
+        M140 S{bed_target}
+        M109 S{ext_target - 50}
+
+        SET_KINEMATIC_POSITION Z={resume_z}
+        G92 Z{resume_z}
+        _LIFT_Z_RESUME
+
+     {% else %}
+
+        M104 S{ext_target - 50}
+        M140 S{bed_target}
+
+        SET_KINEMATIC_POSITION Z={resume_z}
+        G92 Z{resume_z}
+        _LIFT_Z_RESUME
+
+     {% endif %}
+
+     M104 S{ext_target}
+     M190 S{bed_target}
+
+     _REC_LOAD_MESH
+
+     G90
+
+     G28 X
+     G28 Y
+
+     SET_KINEMATIC_POSITION Z={resume_z +10}
+     G92 Z{resume_z + 10}
+
+     G1 X225 Y225 F6000
+
+     M83
+     G90 E0
+
+     M220 S100
+     M221 S100
+
+     G4 P20000
+
+     _POS_MSG
+
+
+[gcode_macro _RESUME_REHEAT]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set ext_target = svv.ext_target | float %}
+
+     _CLOSE_MSG
+
+     _LIFT_Z_RESUME
+
+     M109 S{ext_target}
+
+     _RESUME_INT_FINAL
+
+
+[gcode_macro _RESUME_INT_FINAL]
+gcode:
+
+     _CLOSE_MSG
+
+     SAVE_VARIABLE VARIABLE=actively_printing VALUE=1
+
+     SET_FILAMENT_SENSOR SENSOR=filament_sensor ENABLE=0
+     
+     SDCARD_PRINT_FILE FILENAME=recovered.gcode
+     _SAVE_FILE
+
+[gcode_macro _POS_MSG]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set ext_target = svv.ext_target | float %}
+     {% set bed_target = svv.bed_target | float %}
+     {% set resume_z = svv.z_height | float %}
+     {% set resume_layer = svv.print_progress | float %}
+
+     RESPOND TYPE=command MSG="action:prompt_begin Resume Interrupted Print"
+     RESPOND TYPE=command MSG="action:prompt_text X Position is currently {printer.toolhead.position.x}, Y Position is currently {printer.toolhead.position.y}, Z Height is currently {printer.toolhead.position.z}, Logged Height is {resume_z}, Logged Layer is {resume_layer}, extruder temp is {ext_target}, and bed temp is {bed_target}."
+     RESPOND TYPE=command MSG="action:prompt_button OK|_RES_MSG|primary"
+     RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
+     RESPOND TYPE=command MSG="action:prompt_show"
+
+     #RESPOND MSG="X Position is currently {printer.toolhead.position.x}."
+     #RESPOND MSG="Y Position is currently {printer.toolhead.position.y}."
+     #RESPOND MSG="Z Height is currently {printer.toolhead.position.z}."
+     #RESPOND MSG="Resumed Height is {resume_z}."
+     #RESPOND MSG="Resumed Layer is {resume_layer}."
+
+
+[gcode_macro _RES_MSG]
+gcode:
+
+     _CLOSE_MSG
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_x = svv.x_pos | float %}
+     {% set resume_y = svv.y_pos | float %}
+
+     G90
+     G1 X{resume_x} Y{resume_y} F6000
+
+     RESPOND TYPE=command MSG="action:prompt_begin Z Height Confirmation"
+     RESPOND TYPE=command MSG="action:prompt_text The printer has recovered the print successfully. Z Height must be confirmed before resuming due to stepper jump on re-engagement of the motors. The nozzle temperature will now be set to 10C below the BED target to prevent melting and lower to 0.1mm above the print once the nozzle temperature has dropped. Please place a sheet of paper under the nozzle and wait for the next message."
+     RESPOND TYPE=command MSG="action:prompt_button OK|_RES_CHECK|primary"
+     RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
+     RESPOND TYPE=command MSG="action:prompt_show"
+
+
+[gcode_macro _RES_CHECK]
+variable_next_step: 0
+gcode:
+
+     _CLOSE_MSG
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+     {% set bed_target = svv.bed_target | float %}
+
+     M109 S{(bed_target - 10)}
+
+     RESPOND TYPE=command MSG="action:prompt_begin Z Height Confirmation"
+     RESPOND TYPE=command MSG="action:prompt_text Before clicking ok, please do one final check and remove any oozed filament from the tip of the nozzle."
+     RESPOND TYPE=command MSG="action:prompt_button OK|_RES_CHECK_2|primary"
+     RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
+     RESPOND TYPE=command MSG="action:prompt_show"
+
+
+[gcode_macro _RES_CHECK_2]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+     
+     G1 Z{(resume_z +0.1)} F600
+
+     RESPOND TYPE=command MSG="action:prompt_begin Resume Check"
+     RESPOND TYPE=command MSG="action:prompt_text Move the paper around on print. Is the resistance correct?"
+     RESPOND TYPE=command MSG="action:prompt_button YES|_RES_READY|secondary"
+     RESPOND TYPE=command MSG="action:prompt_button NO|_RES_ADJUST|secondary"
+     RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
+     RESPOND TYPE=command MSG="action:prompt_show"
+
+
+[gcode_macro _RES_ADJUST]
+gcode:
+
+    _CLOSE_MSG
+
+    RESPOND TYPE=command MSG="action:prompt_begin Resume Check Adjust"
+    RESPOND TYPE=command MSG="action:prompt_text Adjust the Z-Offset. SIGNIFICANT ADJUSTMENT MAY BE NECESSARY! This is NORMAL because of the stepper jump. USE CAUTION! The resistance should be fairly tight, but not enough to tear the paper or totally resist movement."
+    RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Up 0.005mm|_RES_ADJ_UP_1|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Up 0.01mm|_RES_ADJ_UP_2|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Up 0.025mm|_RES_ADJ_UP_3|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Up 0.05mm|_RES_ADJ_UP_4|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Up 0.1mm|_RES_ADJ_UP_5|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Down 0.005mm|_RES_ADJ_DOWN_1|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Down 0.01mm|_RES_ADJ_DOWN_2|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Down 0.025mm|_RES_ADJ_DOWN_3|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Down 0.05mm|_RES_ADJ_DOWN_4|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Down 0.1mm|_RES_ADJ_DOWN_5|secondary"
+    RESPOND TYPE=command MSG="action:prompt_button Done|_RES_READY|primary"
+    RESPOND TYPE=command MSG="action:prompt_show"
+
+
+[gcode_macro _RES_ADJ_DOWN_1]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=-0.005 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_DOWN_2]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=-0.01 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_DOWN_3]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=-0.025 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_DOWN_4]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=-0.05 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_DOWN_5]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=-0.1 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_UP_1]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=+0.005 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_UP_2]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=+0.01 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_UP_3]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=+0.025 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_UP_4]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=+0.05 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_ADJ_UP_5]
+gcode:
+
+     {% set svv = printer.save_variables.variables %}
+     {% set resume_z = svv.z_height | float %}
+
+     _CLOSE_MSG
+
+     SET_GCODE_OFFSET Z_ADJUST=+0.1 MOVE=1
+
+     G1 Z{(resume_z + 5)} F600
+     G1 Z{(resume_z + 0.1)}
+
+     _RES_ADJUST
+
+
+[gcode_macro _RES_READY]
+gcode:
+
+    _CLOSE_MSG
+
+    RESPOND TYPE=command MSG="action:prompt_begin Resume Check Finished"
+    RESPOND TYPE=command MSG="action:prompt_text Click OK when the paper has been removed, have verified bed adhesion, and are ready for the print to resume. The head will then lift 10mm, reheat the nozzle to the stated target, and automatically resume the print."
+    RESPOND TYPE=command MSG="action:prompt_button OK|_RESUME_REHEAT|primary"
+    RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
+    RESPOND TYPE=command MSG="action:prompt_show"
+
