@@ -2,6 +2,8 @@
 
 Here is a TRUE WORKING Print Recovery System for Open-Source Klipper Users. This system is NOT UNSAFE for your equipment like other PLR systems such as Yumi and Omega that BLINDLY assume that the X and Y are at 0 when setting the kinematic position of the printer! I have tried those systems and they attempt to run the X and Y axes BEYOND THEIR MECHANICAL LIMITS because they do not home the X and Y axes, but instead set the Kinematic Position of X and Y to 0! It flat out P!$$ES ME OFF that these systems have been published for others to use when they BLANTANTLY DISREGARD AND BYPASS KLIPPER SAFETY SYSTEMS!!!!!! This system DOES NOT DO THAT. This system RESPECTS a user's equipment, NO downward movement is done until the user is ready for it, and it DOES NOT bypass ANY of Klipper's built-in safety measures! The USER has the final say, NOTHING is assumed to be correct, and the user can CANCEL the process at any point during the resume sequence. This system has been modeled very largely around the OEM recovery systems like Creality's factory recovery system on the Sonic Pad, but have a few enhancements over their system: 1, it removes the nozzle from the print the moment the temperature reaches target -50C, then it waits for the bed to fully heat before moving anything on the printer. The work flow is as follows:
 
+Normal Print → Power Loss → Prompt → Recover File → Z Verify → Resume
+
 - The slicer passes values to the _LOG_PROGRESS macro which then saves these values to variables.cfg as the print progresses. This is in the after layer change gcode or layer change gcode. 
 
 - The start print macro or gcode issues _SAVE_FILE which in turn writes a current_file.txt file to the gcode folder and you will see this in your Jobs list. The _SAVE_FILE macro also flags a variable that marks that a print is in progress.
@@ -54,6 +56,9 @@ sed -i 's/\r$//' *.sh
 and: (this is optional and really should only be used if your system has issues running the shell commands. It is also run from inside the /home/sonic/printer_data/config/ folder or equivalent.)
 
 dos2unix *.sh
+
+After editing paths or config filenames, use FIRMWARE_RESTART
+(not just RESTART or UI refresh).
 
 
 Finally, ENJOY HAVING THE PEACE OF MIND THAT YOU HAVE A PLAN B IN THE CASE OF A PRINT FAILURE!
