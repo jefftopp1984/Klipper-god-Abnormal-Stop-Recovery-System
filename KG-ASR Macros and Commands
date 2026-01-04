@@ -235,8 +235,6 @@ gcode:
      _CLOSE_MSG
 
      SAVE_VARIABLE VARIABLE=actively_printing VALUE=1
-
-     SET_FILAMENT_SENSOR SENSOR=filament_sensor ENABLE=0
      
      SDCARD_PRINT_FILE FILENAME=recovered.gcode
      _SAVE_FILE
