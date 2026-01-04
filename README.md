@@ -12,7 +12,7 @@ Normal Print → Power Loss → Prompt → Recover File → Z Verify → Resume
 
 - Upon the bed reaching full target temperature, which is logged every layer change, the printer will home X and Y, center the tool head, then display a message with all of the saved data. This is the first "sanity check" that the user must perform. Does the data look plausible? If so, the user can continue. If it looks wrong, they can cancel at this point. If they cancel, all data will be purged. The recovery file that was written will take 30-seconds to be removed. This is by design as the same function is used to remove it after the print completes and this delay allows Moonraker to fully exit and close the file before it is deleted.
 
-- Once the user accepts, he nozzle will move to the start position of the previously-recorded layer, then prompt the user to place a sheet of paper, such as a standard sheet of printer paper that is known to be 0.1mm, or 1 mil, thick and click ok.
+- Once the user accepts, the nozzle will move to the start position of the previously-recorded layer, then prompt the user to place a sheet of paper, such as a standard sheet of printer paper that is known to be 0.1mm, or 1 mil, thick and click ok.
 
 - At this point, the nozzle temperature is dropped to 10C below the BED target temperature to prevent melting for the gap check. Once the nozzle has reached that point, the user is prompted to ensure there is no oozed filament on the nozzle that will interfere with the gap check and remove any that is present, then click ok.
 
