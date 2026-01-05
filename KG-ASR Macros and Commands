@@ -77,7 +77,7 @@ gcode:
 [gcode_macro _RESUME_INT_PROMPT]
 gcode:
 
-      RESPOND TYPE=command MSG="action:prompt_begin Resume Interrupted Print?"
+      RESPOND TYPE=command MSG="action:prompt_begin Klipper-god Abnormal Stop Recovery (KG-ASR) System - Resume Interrupted Print?"
       RESPOND TYPE=command MSG="action:prompt_text Abnormal Stop Detected. Would you like to resume the interrupted print? If yes, please wait for the next message. The printer is NOT hung."
       RESPOND TYPE=command MSG="action:prompt_button YES|_INIT_RESUME_INT|primary"
       RESPOND TYPE=command MSG="action:prompt_button NO|_CANCEL_INT|secondary"
@@ -248,7 +248,7 @@ gcode:
      {% set resume_z = svv.z_height | float %}
      {% set resume_layer = svv.print_progress | float %}
 
-     RESPOND TYPE=command MSG="action:prompt_begin Resume Interrupted Print"
+     RESPOND TYPE=command MSG="action:prompt_begin KG-ASR Activated"
      RESPOND TYPE=command MSG="action:prompt_text X Position is currently {printer.toolhead.position.x}, Y Position is currently {printer.toolhead.position.y}, Z Height is currently {printer.toolhead.position.z}, Logged Height is {resume_z}, Logged Layer is {resume_layer}, extruder temp is {ext_target}, and bed temp is {bed_target}."
      RESPOND TYPE=command MSG="action:prompt_button OK|_RES_MSG|primary"
      RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
@@ -273,7 +273,7 @@ gcode:
      G90
      G1 X{resume_x} Y{resume_y} F6000
 
-     RESPOND TYPE=command MSG="action:prompt_begin Z Height Confirmation"
+     RESPOND TYPE=command MSG="action:prompt_begin KG-ASR - Z Height Confirmation"
      RESPOND TYPE=command MSG="action:prompt_text The printer has recovered the print successfully. Z Height must be confirmed before resuming due to stepper jump on re-engagement of the motors. The nozzle temperature will now be set to 10C below the BED target to prevent melting and lower to 0.1mm above the print once the nozzle temperature has dropped. Please place a sheet of paper under the nozzle and wait for the next message."
      RESPOND TYPE=command MSG="action:prompt_button OK|_RES_CHECK|primary"
      RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
@@ -292,7 +292,7 @@ gcode:
 
      M109 S{(bed_target - 10)}
 
-     RESPOND TYPE=command MSG="action:prompt_begin Z Height Confirmation"
+     RESPOND TYPE=command MSG="action:prompt_begin KG-ASR - Z Height Confirmation"
      RESPOND TYPE=command MSG="action:prompt_text Before clicking ok, please do one final check and remove any oozed filament from the tip of the nozzle."
      RESPOND TYPE=command MSG="action:prompt_button OK|_RES_CHECK_2|primary"
      RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
@@ -309,7 +309,7 @@ gcode:
      
      G1 Z{(resume_z +0.1)} F600
 
-     RESPOND TYPE=command MSG="action:prompt_begin Resume Check"
+     RESPOND TYPE=command MSG="action:prompt_begin KG-ASR - Resume Check"
      RESPOND TYPE=command MSG="action:prompt_text Move the paper around on print. Is the resistance correct?"
      RESPOND TYPE=command MSG="action:prompt_button YES|_RES_READY|secondary"
      RESPOND TYPE=command MSG="action:prompt_button NO|_RES_ADJUST|secondary"
@@ -322,7 +322,7 @@ gcode:
 
     _CLOSE_MSG
 
-    RESPOND TYPE=command MSG="action:prompt_begin Resume Check Adjust"
+    RESPOND TYPE=command MSG="action:prompt_begin KG-ASR - Resume Check Adjust"
     RESPOND TYPE=command MSG="action:prompt_text Adjust the Z-Offset. SIGNIFICANT ADJUSTMENT MAY BE NECESSARY! This is NORMAL because of the stepper jump. USE CAUTION! The resistance should be fairly tight, but not enough to tear the paper or totally resist movement."
     RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
     RESPOND TYPE=command MSG="action:prompt_button Up 0.005mm|_RES_ADJ_UP_1|secondary"
@@ -504,7 +504,7 @@ gcode:
 
     _CLOSE_MSG
 
-    RESPOND TYPE=command MSG="action:prompt_begin Resume Check Finished"
+    RESPOND TYPE=command MSG="action:prompt_begin KG-ASR - Resume Check Finished"
     RESPOND TYPE=command MSG="action:prompt_text Click OK when the paper has been removed, have verified bed adhesion, and are ready for the print to resume. The head will then lift 10mm, reheat the nozzle to the stated target, and automatically resume the print."
     RESPOND TYPE=command MSG="action:prompt_button OK|_RESUME_REHEAT|primary"
     RESPOND TYPE=command MSG="action:prompt_button CANCEL|_CANCEL_INT|secondary"
