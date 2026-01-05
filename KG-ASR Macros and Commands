@@ -513,7 +513,7 @@ gcode:
 [gcode_macro _LIFT_Z_RESUME]
 description: Lifts the Z-axis by 10mm, not to exceed 470mm, for recovering an interrupted print
 gcode:
-  {% set max_z = 470 %}
+  {% set max_z = 470 %} # Set this to be the maximum Z position of your printer
   {% set current_z = printer.toolhead.position.z %}
   {% set target_z = [current_z + 10, max_z]|min %}
 
