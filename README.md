@@ -61,6 +61,8 @@ All of the included macros and shell commands are given in the zip file. It is w
 
 Please place the macros and shell commands in the appropriate locations, outlined in the "ASR Macros and Commands.txt" file
 
+*** IMPORTANT: After placing the macros in the ab_stop_recover.cfg, change the coordinates toward the end of the _RESUME_INT macro to be the center of your bed. The default values are for a LARGE CR-M4 so they will need to be updated to match YOUR bed size.
+
 Users will also need to verify the port number in save_current_file.sh matches your printer's port number. It was designed for a PER INSTANCE installation. User with multiple printers will need SEPARATE COPIES of the shell commands in each printer's folders and verify that the save_variables file is correct. While it is possible to use a common variables.cfg file under /home/sonic/klipper/ or /home/pi/klipper/, it is NOT RECOMMENDED because if both printers reach a layer change at the exact same moment, data can get corrupted. Users will also need to make sure the svv.* variables are named appropriately for their setup. As stated, this is designed for a SINGLE PRINTER, but can easily be used in multiple instances as long as the paths are reflected correctly.
 
 Users will also have to ensure that the shell commands are executable via SSH by using:
