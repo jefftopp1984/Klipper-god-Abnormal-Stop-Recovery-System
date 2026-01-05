@@ -201,7 +201,7 @@ gcode:
      SET_KINEMATIC_POSITION Z={resume_z +10}
      G92 Z{resume_z + 10}
 
-     G1 X225 Y225 F6000
+     G1 X225 Y225 F6000 # Change these coordinates to be the center of your bed
 
      M83
      G90 E0
