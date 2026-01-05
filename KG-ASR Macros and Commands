@@ -201,7 +201,7 @@ gcode:
      SET_KINEMATIC_POSITION Z={resume_z +10}
      G92 Z{resume_z + 10}
 
-     G1 X{(printer.toolhead.axis_maximum.x / 2)} Y{(printer.toolhead.axis_maximum.x / 2)} F6000
+     G1 X{(printer.toolhead.axis_maximum.x / 2)} Y{(printer.toolhead.axis_maximum.y / 2)} F6000
 
      M83
      G90 E0
