@@ -88,6 +88,12 @@ dos2unix *.sh
 After editing paths or config filenames, use FIRMWARE_RESTART
 (not just RESTART or UI refresh).
 
+NOTE: IF YOUR PRINTER IS IN AN ENCLOSURE and you want the bed heater to come back online immediately so that the print stays adhered (and you have a watchdog that restarts the system to reconnect), you can add these two lines to the delayed gcode RESUME_INTERRUPTED just above _RESUME_INT_PROMPT while keeping the same indentation as _RESUME_INT_PROMPT. THIS IS AT YOUR OWN RISK! The system IS NOT designed this way by default for safety reasons. If someone has an open printer and the interruption was caused by something falling on the printer, that would be a serious fire risk to automatically turn on the bed heater immediately after the system comes back online while unattended. That is UNACCEPTABLE behavior for the masses which is why the system is not designed in this manner by default! So, if YOU add these lines to that section, YOU ASSUME ALL RISKS AND LIABILITY!!! Klipper-god is NOT responsible for careless or reckless actions.
+
+{% set bed_target = svv.crm4_bed_target | float %}
+
+M140 S{bed_target}
+
 
 Finally, ENJOY HAVING THE PEACE OF MIND THAT YOU HAVE A PLAN B IN THE CASE OF A PRINT FAILURE!
 
