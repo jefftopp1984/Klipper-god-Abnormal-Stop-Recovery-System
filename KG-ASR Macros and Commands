@@ -38,6 +38,8 @@ filename: variables.cfg # Change this name for additional printers
 
 [respond]
 
+[force_move] # this enables the SET_KINEMATIC_POSITION commands. No actual forced moves are made in this system.
+
 
 # ********* Place everything below this line in a new file named ab_stop_recover.cfg **************
 
