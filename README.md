@@ -94,6 +94,10 @@ NOTE: IF YOUR PRINTER IS IN AN ENCLOSURE and you want the bed heater to come bac
 
 M140 S{bed_target}
 
+If you do add this, be sure to add this to your _CANCEL_INT macro also
+
+M104 S0
+M140 S0
 
 Finally, ENJOY HAVING THE PEACE OF MIND THAT YOU HAVE A PLAN B IN THE CASE OF A PRINT FAILURE!
 
