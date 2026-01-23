@@ -40,13 +40,6 @@ filename: variables.cfg # Change this name for additional printers
 
 [force_move] # this enables the SET_KINEMATIC_POSITION commands. No actual forced moves are made in this system.
 
-# ********* Place these lines in your end print and cancel print macros/gcode sections:
-
-SAVE_VARIABLE VARIABLE=z_height VALUE=0
-SAVE_VARIABLE VARIABLE=print_progress VALUE=0
-SAVE_VARIABLE VARIABLE=actively_printing VALUE=0
-
-
 # ********* Place everything below this line in a new file named ab_stop_recover.cfg **************
 
 # ***** Abnormal Stop Recovery Macros *****
